@@ -13,6 +13,14 @@ const App = () => {
 
   const languageRegex = `Regular Expression = a*((acb)+)a*c`;
 
+  const nonTerminalSymbols = ["S"];
+
+  const terminalSymbols = ["a", "b", "c"];
+
+  const startingSymbol = "S";
+
+  const productionRules = { S: { options: ["aS", "aSbS", "c"] } };
+
   const handleOnCheckString = () => {};
   return (
     <>
