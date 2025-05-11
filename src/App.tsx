@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { ChevronLeft } from "lucide-react";
+import { ArrowRightLeft, ChevronLeft } from "lucide-react";
+import ParseTree from "./modules/SimulatorValidator";
+import { ambigGrammar, unambigGrammar } from "./modules/grammar";
 
 const App = () => {
   const [inputString, setInputString] = useState<string>("");
+
+  const [selectedGrammar, setSelectedGrammar] = useState<"am" | "unam">("unam");
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const [checkString, setCheckString] = useState<string>("");
 
   const [isStringAccepted, setisStringAccepted] = useState(false);
 
@@ -13,15 +21,15 @@ const App = () => {
 
   const languageRegex = `Regular Expression = a*((acb)+)a*c`;
 
-  const nonTerminalSymbols = ["S"];
+  const handleOnCheckString = () => {
+    setCheckString(inputString);
+  };
 
-  const terminalSymbols = ["a", "b", "c"];
-
-  const startingSymbol = "S";
-
-  const productionRules = { S: { options: ["aS", "aSbS", "c"] } };
-
-  const handleOnCheckString = () => {};
+  const handleOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      buttonRef.current?.click();
+    }
+  };
   return (
     <>
       <div className="h-screen w-screen gap-4 flex flex-col justify-between">
@@ -41,6 +49,29 @@ const App = () => {
             </h1>
             <h1 className="text-center">{formalLanguage}</h1>
             <h1 className="text-center">{languageRegex}</h1>
+            <section className="flex gap-2 justify-center">
+              <Label>RULES</Label>
+              <Button
+                className="hover:scale-105 transition-transform"
+                onClick={() =>
+                  selectedGrammar == "am"
+                    ? setSelectedGrammar("unam")
+                    : setSelectedGrammar("am")
+                }
+              >
+                <ArrowRightLeft />
+              </Button>
+            </section>
+            <h1 className="text-center">
+              {selectedGrammar == "am" ? (
+                <>{`S → aS | aSbS | c`}</>
+              ) : (
+                <>
+                  S → X | Y<br />
+                  X → aXbX | c<br />Y → aS | aXbY
+                </>
+              )}
+            </h1>
           </section>
           <section className="flex flex-col gap-2">
             <Label htmlFor="inputString">Input String</Label>
@@ -49,8 +80,17 @@ const App = () => {
                 name="inputString"
                 type="text"
                 onChange={(e) => setInputString(e.target.value)}
+                onKeyDown={handleOnKeyDown}
+                className={
+                  !isStringAccepted
+                    ? "ring-4 ring-red-400 focus-visible:ring-red-400"
+                    : ""
+                }
               />
-              <Button onClick={handleOnCheckString}>Check String</Button>
+              <Button onClick={() => setInputString("")}>Clear</Button>
+              <Button onClick={handleOnCheckString} ref={buttonRef}>
+                Check String
+              </Button>
             </section>
           </section>
           <section className="flex">
@@ -63,6 +103,11 @@ const App = () => {
               )}
             </Label>
           </section>
+          <ParseTree
+            input={checkString}
+            grammar={selectedGrammar == "am" ? ambigGrammar : unambigGrammar}
+            setIsStringAccepted={setisStringAccepted}
+          ></ParseTree>
         </main>
         <footer></footer>
       </div>
