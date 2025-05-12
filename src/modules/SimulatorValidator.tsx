@@ -1,6 +1,5 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Parser, Grammar } from "nearley";
-import type { CompiledRules } from "nearley";
 import {
   Accordion,
   AccordionContent,
@@ -8,6 +7,22 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
+import { getDerivation, type derivativeTableType } from "./CFGs";
+import {
+  ambigGrammar,
+  customAmGrammar,
+  CustomUnAmGrammar,
+  unambigGrammar,
+} from "./grammar";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // For Typescipt , Parse Error Type
 type NearleyParseError = Error & {
@@ -15,13 +30,13 @@ type NearleyParseError = Error & {
   token?: any;
 };
 
-function ParseTree({
+function SimulatorValidator({
   input,
   grammar,
   setIsStringAccepted,
 }: {
   input: string;
-  grammar: CompiledRules;
+  grammar: "am" | "unam";
   setIsStringAccepted: Dispatch<SetStateAction<boolean>>;
 }) {
   // Result state holder
@@ -30,10 +45,22 @@ function ParseTree({
   // Errors state holder
   const [error, setError] = useState<string>("");
 
+  const [leftParseTable, setLeftParseTable] = useState<
+    Array<Array<derivativeTableType>>
+  >([]);
+
+  const [rightParseTable, setRightParseTable] = useState<
+    Array<Array<derivativeTableType>>
+  >([]);
+
+  let treeData: any = [];
+
   // Run this code everytime parameter/prop "input" changes
   useEffect(() => {
     // Create new Parser from nearly
-    const parser = new Parser(Grammar.fromCompiled(grammar));
+    const parser = new Parser(
+      Grammar.fromCompiled(grammar == "am" ? ambigGrammar : unambigGrammar)
+    );
 
     try {
       // Gives the parser thing to parse
@@ -61,6 +88,8 @@ function ParseTree({
         setResult(parser.results);
         setError("");
         setIsStringAccepted(true);
+
+        console.log(treeData);
       }
     } catch (e) {
       // In case there are any errors in the parsing process
@@ -72,7 +101,23 @@ function ParseTree({
       console.log(`Error Offset : ${err.offset}`);
       console.log(`Error Token : ${err.token}`);
     }
-  }, [input]);
+
+    setLeftParseTable(
+      getDerivation(
+        grammar == "am" ? customAmGrammar : CustomUnAmGrammar,
+        input,
+        "l"
+      )
+    );
+
+    setRightParseTable(
+      getDerivation(
+        grammar == "am" ? customAmGrammar : CustomUnAmGrammar,
+        input,
+        "r"
+      )
+    );
+  }, [input, grammar]);
 
   console.log(`Grammar Results ${result}`);
   console.log(`Grammar Errors ${error}\n`);
@@ -90,7 +135,7 @@ function ParseTree({
             </AccordionTrigger>
             <AccordionContent>
               {result ? (
-                <pre>{JSON.stringify(result, null, 1)}</pre>
+                <pre>{JSON.stringify(result, null, 2)}</pre>
               ) : (
                 <Label>This is a rejected String</Label>
               )}
@@ -104,18 +149,81 @@ function ParseTree({
               </section>
             </AccordionContent>
           </AccordionItem>
-          {/* <AccordionItem value="item-3">
+          <AccordionItem value="item-3">
             <AccordionTrigger>Derivations</AccordionTrigger>
-            <AccordionContent>Derivations</AccordionContent>
+            <AccordionContent className="grid grid-cols-2 gap-2">
+              <section className="w-full gap-2 flex flex-col">
+                <Label>Leftmost Derivations</Label>
+                {leftParseTable.length != 0 ? (
+                  leftParseTable.map((derivation, index) => (
+                    <Table className="border-2 rounded-md">
+                      <TableCaption>{`Derivation ${index + 1}`}</TableCaption>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Rule</TableHead>
+                          <TableHead>State</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {derivation.map((dir) => (
+                          <TableRow>
+                            <TableCell>{dir.rule}</TableCell>
+                            <td>{dir.state}</td>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ))
+                ) : (
+                  <span>No Left Parse Table</span>
+                )}
+              </section>
+              <section className="w-full gap-2 flex flex-col">
+                <Label>Rightmost Derivations</Label>
+                {rightParseTable.length != 0 ? (
+                  rightParseTable.map((derivation, index) => (
+                    <Table className="border-2 rounded-md">
+                      <TableCaption>{`Derivation ${index + 1}`}</TableCaption>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Rule</TableHead>
+                          <TableHead>State</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {derivation.map((dir) => (
+                          <TableRow>
+                            <TableCell>{dir.rule}</TableCell>
+                            <td>{dir.state}</td>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ))
+                ) : (
+                  <span>No Right Parse Table</span>
+                )}
+              </section>
+            </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-4">
             <AccordionTrigger>Trees</AccordionTrigger>
-            <AccordionContent>Parse Trees</AccordionContent>
-          </AccordionItem> */}
+            <AccordionContent className="h-screen border-2">
+              <div className="h-full flex flex-col p-4">
+                <section className="h-full flex flex-col">
+                  <Label>Left Most Parse Tree</Label>
+                </section>
+                <section className="h-full flex flex-col">
+                  <Label>Right Most Parse Tree</Label>
+                </section>
+              </div>
+              {/* <Tree data={treeData} orientation="vertical" /> */}
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </div>
     </div>
   );
 }
 
-export default ParseTree;
+export default SimulatorValidator;

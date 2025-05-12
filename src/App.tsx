@@ -3,8 +3,9 @@ import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import { ArrowRightLeft, ChevronLeft } from "lucide-react";
-import ParseTree from "./modules/SimulatorValidator";
-import { ambigGrammar, unambigGrammar } from "./modules/grammar";
+import SimulatorValidator from "./modules/SimulatorValidator";
+import { customAmGrammar } from "./modules/grammar";
+import { getDerivation } from "./modules/CFGs";
 
 const App = () => {
   const [inputString, setInputString] = useState<string>("");
@@ -19,10 +20,11 @@ const App = () => {
 
   const formalLanguage = `Language = { aⁿc | n ≥ 0 } ∪ { a * (acb)ⁿ aᵐc | n ≥ 1, m ≥ 0 } `;
 
-  const languageRegex = `Regular Expression = a*((acb)+)a*c`;
+  const languageRegex = `Regular Expression = a*(acb)*a*c`;
 
   const handleOnCheckString = () => {
     setCheckString(inputString);
+    getDerivation(customAmGrammar, "aacbc", "r");
   };
 
   const handleOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -30,6 +32,7 @@ const App = () => {
       buttonRef.current?.click();
     }
   };
+
   return (
     <>
       <div className="h-screen w-screen gap-4 flex flex-col justify-between">
@@ -103,11 +106,11 @@ const App = () => {
               )}
             </Label>
           </section>
-          <ParseTree
+          <SimulatorValidator
             input={checkString}
-            grammar={selectedGrammar == "am" ? ambigGrammar : unambigGrammar}
+            grammar={selectedGrammar}
             setIsStringAccepted={setisStringAccepted}
-          ></ParseTree>
+          ></SimulatorValidator>
         </main>
         <footer></footer>
       </div>
