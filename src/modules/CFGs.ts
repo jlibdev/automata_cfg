@@ -7,7 +7,10 @@ export type derivativeTableType = {
 
 let derivativeTable : Array<Array<derivativeTableType>> = []
 
+
+// function retrieves the next NonTerminal Symbol from the state string
 function getIndexOfSymbol (str: string, symbols : Array<string> , dir : "l" | "r"){
+
     if(dir=="l"){
         
         for(let i = 0; i < str.length;i++){
@@ -74,9 +77,7 @@ function deriveString(grammar : grammarDefinition , input_string : string , dTab
                     deriveString(grammar, input_string, [...dTable, {rule : `${play_rule} → ${option}` , state: new_state}] , "l")
                 }
             } 
-            else {
-                console.log(input_string.slice(rule_index,input_string.length) , new_state.slice(0,rule_index) , rule_index);
-                
+            else {                
                 if(new_state.length <= input_string.length){
                     deriveString(grammar, input_string, [...dTable, {rule : `${play_rule} → ${option}` , state: new_state}] , "r")
                 }
