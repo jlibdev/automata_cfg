@@ -1,5 +1,12 @@
 # Automata Project
 
+Techonologies used
+
+* ReactJs + Typescipt
+* NearleyJs
+* ShadCn
+* React-D3-Tree
+
 Files of Interest 
 
 modules
